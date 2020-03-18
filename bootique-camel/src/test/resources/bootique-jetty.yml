@@ -3,9 +3,13 @@ log:
   loggers:
     it.imolainformatica:
       level: debug
-
+    org.apache.camel.component.servlet:
+      level: trace
   appenders:
     - type: console
       logFormat: '%d [%thread] %-5level %logger{35} - %msg%n'
       target: stdout
 
+camel:
+  requiresHttpProcessor: true
+  servletMapping: /camel/*
