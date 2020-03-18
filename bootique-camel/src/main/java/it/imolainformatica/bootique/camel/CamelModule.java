@@ -2,7 +2,6 @@ package it.imolainformatica.bootique.camel;
 
 import io.bootique.BQCoreModule;
 import io.bootique.ConfigModule;
-import io.bootique.command.CommandOutcome;
 import io.bootique.config.ConfigurationFactory;
 import io.bootique.di.Binder;
 import io.bootique.di.Provides;
@@ -14,8 +13,11 @@ import org.apache.camel.component.servlet.CamelHttpTransportServlet;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.handler.ContextHandler;
+import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.servlet.ServletMapping;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,8 +50,6 @@ public class CamelModule extends ConfigModule {
                                     BootLogger bootLogger, ShutdownManager shutdownManager) {
         logger.debug("createCamelContext start");
         CamelFactory camelFactory=config(CamelFactory.class, configFactory);
-        logger.debug("conf httpRequired={}",camelFactory.isRequiresHttpProcessor());
-        logger.debug("conf servletMapping={}",camelFactory.getServletMapping());
         CamelContext camelContext= new DefaultCamelContext();
         startupListeners.forEach( startupListener -> {
             try {
@@ -77,7 +77,8 @@ public class CamelModule extends ConfigModule {
             camelContext.stop();
         });
 
-        if (camelFactory.isRequiresHttpProcessor()) {
+        logger.debug("conf requiresHttpTrasnsportServlet={}",camelFactory.isRequiresHttpTransportServlet());
+        if (camelFactory.isRequiresHttpTransportServlet()) {
             Server jettyServer=jettyProvider.get();
             configureJetty(jettyServer, camelFactory);
             startJetty(jettyServer);
@@ -86,15 +87,36 @@ public class CamelModule extends ConfigModule {
     }
 
     private void configureJetty(Server jettyServer, CamelFactory camelFactory) {
+        logger.debug("conf contextName={}",camelFactory.getContextName());
         Handler handler=jettyServer.getHandler();
-        ServletContextHandler servletHandler;
+        ServletContextHandler servletHandler=null;
+        boolean multipleHandlers=false;
         if (handler!=null) {
             if (handler instanceof ServletContextHandler) {
-                servletHandler=(ServletContextHandler)handler;
+                logger.debug("a jetty handler already exists");
+                ServletContextHandler existingServletHandler=(ServletContextHandler)handler;
+                if (canReuseHandler(existingServletHandler, camelFactory.getContextName())) {
+                    logger.debug("reusing existing servletHandler");
+                    servletHandler=existingServletHandler;
+                    if (existingServletHandler.getServletHandler()!=null && existingServletHandler.getServletHandler().getServletMappings()!=null) {
+                        ServletMapping[] servletMappings = existingServletHandler.getServletHandler().getServletMappings();
+                        for (ServletMapping servletMapping : servletMappings) {
+                            camelFactory.getServletUrlPatterns().forEach(servletPath -> {
+                                if (servletMapping.containsPathSpec(servletPath)) {
+                                    logger.warn("Camel servlet is overriding an existing servlet path {}", servletMapping.toString());
+                                }
+                            });
+                        }
+                    }
+                } else {
+                    multipleHandlers=true;
+                }
             } else {
                 throw new RuntimeException("unable to configure Jetty for Camel jetty.handler is not instance of ServletContextHandler");
             }
-        } else {
+        }
+        if (servletHandler==null) {
+            logger.debug("creating a new servletHandler");
             int options = 0;
             boolean sessions=true;
             if (sessions) {
@@ -105,12 +127,31 @@ public class CamelModule extends ConfigModule {
             servletHandler.setCompactPath(false);
         }
 
-        ServletHolder holder = new ServletHolder(new CamelHttpTransportServlet());
-        holder.setName(camelFactory.getServletName());
-        servletHandler.addServlet(holder, camelFactory.getServletMapping());
+        ServletHolder holder = new ServletHolder(camelFactory.getServletName(), CamelHttpTransportServlet.class);
+        ServletContextHandler servletHandlerLocal=servletHandler;
+        camelFactory.getServletUrlPatterns().forEach(servletUrlPattern -> servletHandlerLocal.addServlet(holder, servletUrlPattern));
 
-        logger.debug("adding servletHandler to Jetty");
-        jettyServer.setHandler(servletHandler);
+        logger.debug("adding Handler to Jetty");
+        if (multipleHandlers) {
+            ContextHandlerCollection contexts= new ContextHandlerCollection((ContextHandler) handler, servletHandler);
+            jettyServer.setHandler(contexts);
+        } else {
+            jettyServer.setHandler(servletHandler);
+        }
+    }
+
+    private boolean canReuseHandler(ServletContextHandler existingServletHandler, String contextName) {
+        String existingContextPath=existingServletHandler.getContextPath();
+        if (existingContextPath==null) {
+            existingContextPath="";
+        }
+        if (contextName==null) {
+            contextName="";
+        }
+        logger.debug("existingContextPath={}, contextName={}", existingContextPath, contextName);
+        return (existingContextPath!=null && contextName!=null &&
+                contextName.equals(existingContextPath));
+
     }
 
     public void startJetty(Server jettyServer) {

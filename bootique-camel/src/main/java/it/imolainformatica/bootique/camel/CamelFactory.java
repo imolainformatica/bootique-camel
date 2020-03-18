@@ -1,26 +1,26 @@
 package it.imolainformatica.bootique.camel;
 
+import java.util.Collections;
+import java.util.Set;
+
 public class CamelFactory {
-    private boolean requiresHttpProcessor=false;
-    private String servletMapping="/*";
+    private boolean requiresHttpTransportServlet =false;
+    private Set<String> servletUrlPatterns;
     private String servletName="CamelServlet";
-    private String contextName="";
+    private String contextName="/";
 
-    public boolean isRequiresHttpProcessor() {
-        return requiresHttpProcessor;
+    public CamelFactory() {
+        servletUrlPatterns=Collections.singleton("/*");
     }
 
-    public void setRequiresHttpProcessor(boolean requiresHttpProcessor) {
-        this.requiresHttpProcessor = requiresHttpProcessor;
+    public boolean isRequiresHttpTransportServlet() {
+        return requiresHttpTransportServlet;
     }
 
-    public String getServletMapping() {
-        return servletMapping;
+    public void setRequiresHttpTransportServlet(boolean requiresHttpTransportServlet) {
+        this.requiresHttpTransportServlet = requiresHttpTransportServlet;
     }
 
-    public void setServletMapping(String servletMapping) {
-        this.servletMapping = servletMapping;
-    }
 
     public String getContextName() {
         return contextName;
@@ -36,5 +36,13 @@ public class CamelFactory {
 
     public void setServletName(String servletName) {
         this.servletName = servletName;
+    }
+
+    public Set<String> getServletUrlPatterns() {
+        return servletUrlPatterns;
+    }
+
+    public void setServletUrlPatterns(Set<String> servletUrlPatterns) {
+        this.servletUrlPatterns = servletUrlPatterns;
     }
 }
