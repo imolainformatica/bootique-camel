@@ -15,7 +15,7 @@ public class StartCommand extends CommandWithMetadata {
 
     private static final Logger logger= LoggerFactory.getLogger(StartCommand.class.getName());
 
-    private Provider<CamelContext> serverProvider;
+    private final Provider<CamelContext> serverProvider;
 
     @Inject
     public StartCommand(Provider<CamelContext> serverProvider) {

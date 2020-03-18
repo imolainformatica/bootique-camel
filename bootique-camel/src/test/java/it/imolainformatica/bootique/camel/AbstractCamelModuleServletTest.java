@@ -4,13 +4,10 @@ import io.bootique.BQRuntime;
 import io.bootique.di.BQModule;
 import io.bootique.test.junit.BQTestFactory;
 import okhttp3.*;
-import org.apache.camel.CamelContext;
 import org.apache.camel.Exchange;
-import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
 import org.junit.Assert;
 import org.junit.Rule;
-import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,23 +18,21 @@ public abstract class AbstractCamelModuleServletTest {
     private static final String CAMEL_ECHO="CamelEcho:";
 
     @Rule
-    public BQTestFactory testFactory = new BQTestFactory().autoLoadModules();
+    public final BQTestFactory testFactory = new BQTestFactory().autoLoadModules();
 
     protected abstract BQRuntime startApp(BQModule module);
 
     protected BQRuntime getCamelRuntime() {
         return startApp(b ->CamelModule.extend(b).addRouteBuilder(new RouteBuilder() {
             public void configure() {
-                from("servlet:echo?matchOnUriPrefix=true").process(new Processor() {
-                    public void process(Exchange exchange) throws Exception {
-                        String contentType = exchange.getIn().getHeader(Exchange.CONTENT_TYPE, String.class);
-                        String bodyText=exchange.getIn().getBody(String.class);
-                        String path = exchange.getIn().getHeader(Exchange.HTTP_URI, String.class);
-                        path = path.substring(path.lastIndexOf("/"));
-                        exchange.getMessage().setHeader(Exchange.CONTENT_TYPE, contentType + "; charset=UTF-8");
-                        exchange.getMessage().setHeader("PATH", path);
-                        exchange.getMessage().setBody(CAMEL_ECHO + bodyText);
-                    }
+                from("servlet:echo?matchOnUriPrefix=true").process(exchange -> {
+                    String contentType = exchange.getIn().getHeader(Exchange.CONTENT_TYPE, String.class);
+                    String bodyText=exchange.getIn().getBody(String.class);
+                    String path = exchange.getIn().getHeader(Exchange.HTTP_URI, String.class);
+                    path = path.substring(path.lastIndexOf("/"));
+                    exchange.getMessage().setHeader(Exchange.CONTENT_TYPE, contentType + "; charset=UTF-8");
+                    exchange.getMessage().setHeader("PATH", path);
+                    exchange.getMessage().setBody(CAMEL_ECHO + bodyText);
                 });
             }
         }));

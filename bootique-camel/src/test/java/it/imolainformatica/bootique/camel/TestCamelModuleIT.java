@@ -7,7 +7,6 @@ import org.apache.camel.CamelContext;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.apache.camel.impl.DefaultCamelContext;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -27,7 +26,6 @@ public class TestCamelModuleIT {
 
     @Test
     public void testSimpleBuilder() throws InterruptedException {
-        CamelContext context= new DefaultCamelContext();
         BQRuntime runtime=startApp(b ->CamelModule.extend(b).addRouteBuilder(new RouteBuilder() {
             public void configure() {
                 from("direct:start").streamCaching().to("mock:result");

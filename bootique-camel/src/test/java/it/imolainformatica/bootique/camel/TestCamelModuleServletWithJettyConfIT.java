@@ -6,12 +6,12 @@ import org.apache.camel.CamelContext;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class TestCamelModuleServletWithContextNameIT extends AbstractCamelModuleServletTest{
+public class TestCamelModuleServletWithJettyConfIT extends AbstractCamelModuleServletTest{
 
 
     @Override
     protected BQRuntime startApp(BQModule module) {
-        BQRuntime runtime = testFactory.app("-s").args("--config=classpath:bootique-jetty-context.yml")
+        BQRuntime runtime = testFactory.app("-s").args("--config=classpath:bootique-jetty-conf.yml")
                 .module(module)
                 .createRuntime();
         runtime.run();
@@ -20,11 +20,11 @@ public class TestCamelModuleServletWithContextNameIT extends AbstractCamelModule
     }
 
     @Test
-    public void testContextWithServletAndContextName() throws Exception {
+    public void testContextWithServletAndJettyPort() throws Exception {
         BQRuntime runtime=getCamelRuntime();
         CamelContext camelContext= runtime.getInstance(CamelContext.class);
         Assert.assertNotNull(camelContext);
-        testEchoAtUrl("http://localhost:8080/camelcontext/camel/echo");
-        testEchoAtUrl("http://localhost:8080/camelcontext/services/echo");
+        testEchoAtUrl("http://localhost:9999/camel/echo");
+        testEchoAtUrl("http://localhost:9999/services/echo");
     }
 }

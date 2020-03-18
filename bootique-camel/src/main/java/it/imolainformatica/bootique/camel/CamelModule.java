@@ -117,12 +117,7 @@ public class CamelModule extends ConfigModule {
         }
         if (servletHandler==null) {
             logger.debug("creating a new servletHandler");
-            int options = 0;
-            boolean sessions=true;
-            if (sessions) {
-                options |= ServletContextHandler.SESSIONS;
-            }
-            servletHandler= new ServletContextHandler(options);
+            servletHandler= new ServletContextHandler(ServletContextHandler.SESSIONS);
             servletHandler.setContextPath(camelFactory.getContextName());
             servletHandler.setCompactPath(false);
         }
@@ -149,12 +144,11 @@ public class CamelModule extends ConfigModule {
             contextName="";
         }
         logger.debug("existingContextPath={}, contextName={}", existingContextPath, contextName);
-        return (existingContextPath!=null && contextName!=null &&
-                contextName.equals(existingContextPath));
+        return (contextName.equals(existingContextPath));
 
     }
 
-    public void startJetty(Server jettyServer) {
+    private void startJetty(Server jettyServer) {
         try {
             // this blocks until a successful start or an error, then releases current thread, while Jetty
             // stays running on the background

@@ -1,0 +1,21 @@
+log:
+  level: warn
+  loggers:
+    it.imolainformatica:
+      level: debug
+    org.apache.camel.component.servlet:
+      level: trace
+  appenders:
+    - type: console
+      logFormat: '%d [%thread] %-5level %logger{35} - %msg%n'
+      target: stdout
+
+jetty:
+  connectors:
+    - port: 9999
+
+camel:
+  requiresHttpTransportServlet: true
+  servletUrlPatterns:
+    - "/camel/*"
+    - "/services/*"
