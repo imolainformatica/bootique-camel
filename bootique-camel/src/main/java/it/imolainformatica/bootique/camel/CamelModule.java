@@ -11,20 +11,15 @@ import io.bootique.jetty.MappedServlet;
 import io.bootique.log.BootLogger;
 import io.bootique.shutdown.ShutdownManager;
 import it.imolainformatica.bootique.camel.command.StartCommand;
-import org.apache.camel.*;
+import org.apache.camel.CamelContext;
+import org.apache.camel.RoutesBuilder;
+import org.apache.camel.StartupListener;
 import org.apache.camel.component.servlet.CamelHttpTransportServlet;
 import org.apache.camel.impl.DefaultCamelContext;
-import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.handler.ContextHandler;
-import org.eclipse.jetty.server.handler.ContextHandlerCollection;
-import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
-import org.eclipse.jetty.servlet.ServletMapping;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Named;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 import java.util.HashSet;
@@ -99,7 +94,7 @@ public class CamelModule extends ConfigModule {
         if (camelFactory.isRequiresHttpTransportServlet()) {
             return new MappedServlet<>(new CamelHttpTransportServlet(), camelFactory.getServletUrlPatterns(),camelFactory.getServletName());
         } else {
-            return new MappedServlet(new CamelHttpTransportServlet(),new HashSet<>(),camelFactory.getServletName());
+            return new MappedServlet<>(new CamelHttpTransportServlet(),new HashSet<>(),camelFactory.getServletName());
         }
     }
 

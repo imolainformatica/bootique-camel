@@ -7,7 +7,6 @@ public class CamelFactory {
     private boolean requiresHttpTransportServlet =false;
     private Set<String> servletUrlPatterns;
     private String servletName="CamelServlet";
-    private String contextName="/";
 
     public CamelFactory() {
         servletUrlPatterns=Collections.singleton("/*");
@@ -19,15 +18,6 @@ public class CamelFactory {
 
     public void setRequiresHttpTransportServlet(boolean requiresHttpTransportServlet) {
         this.requiresHttpTransportServlet = requiresHttpTransportServlet;
-    }
-
-
-    public String getContextName() {
-        return contextName;
-    }
-
-    public void setContextName(String contextName) {
-        this.contextName = contextName;
     }
 
     public String getServletName() {
