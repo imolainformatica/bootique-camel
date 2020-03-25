@@ -54,10 +54,12 @@ public class CamelModule extends ConfigModule {
     CamelContext createCamelContext(Set<RoutesBuilder> routesBuilder,
                                     Set<StartupListener> startupListeners, Set<MappedEndpoint> mapperEndpoints,
                                     ConfigurationFactory configFactory,
-                                    Provider<Server> jettyProvider,
                                     BootLogger bootLogger, ShutdownManager shutdownManager) {
         logger.debug("createCamelContext start");
         CamelContext camelContext= new DefaultCamelContext();
+        CamelFactory camelFactory=config(CamelFactory.class,configFactory);
+        camelContext.setAllowUseOriginalMessage(camelFactory.getAllowUseOriginalMessage());
+        camelContext.setUseMDCLogging(camelFactory.getUseMDCLogging());
         startupListeners.forEach( startupListener -> {
             try {
                 camelContext.addStartupListener(startupListener);

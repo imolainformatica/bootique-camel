@@ -11,12 +11,12 @@ import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 
-public class TestCamelModuleIT {
+public class TestCamelModulePropertiesIT {
     @Rule
     public BQTestFactory testFactory = new BQTestFactory().autoLoadModules();
 
     private BQRuntime startApp(BQModule module) {
-        BQRuntime runtime = testFactory.app("-s").args("--config=classpath:bootique.yml")
+        BQRuntime runtime = testFactory.app("-s").args("--config=classpath:bootique-props.yml")
                 .module(module)
                 .createRuntime();
         runtime.run();
@@ -25,19 +25,15 @@ public class TestCamelModuleIT {
     }
 
     @Test
-    public void testSimpleBuilder() throws InterruptedException {
+    public void testProperties() throws InterruptedException {
         BQRuntime runtime=startApp(b ->CamelModule.extend(b).addRouteBuilder(new RouteBuilder() {
             public void configure() {
                 from("direct:start").streamCaching().to("mock:result");
             }
         }));
         CamelContext camelContext= runtime.getInstance(CamelContext.class);
-        Assert.assertNotNull(camelContext);
-        ProducerTemplate producerTemplate=camelContext.createProducerTemplate();
+        Assert.assertTrue(camelContext.isAllowUseOriginalMessage());
+        Assert.assertTrue(camelContext.isUseMDCLogging());
 
-        MockEndpoint mockEndpoint = (MockEndpoint) camelContext.getEndpoint("mock:result");
-        producerTemplate.sendBody("direct:start","ciao");
-        mockEndpoint.setExpectedMessageCount(1);
-        mockEndpoint.assertIsSatisfied();
     }
 }
